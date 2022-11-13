@@ -14,7 +14,7 @@ Args:
     The file format
 */
 void FIP_Graph::SaveToFile(char *filename, FREE_IMAGE_FORMAT image_format){
-    long width, height;
+    unsigned long width, height;
     width = options.width;
     height = options.height;
     int bpp = 24;
@@ -22,8 +22,13 @@ void FIP_Graph::SaveToFile(char *filename, FREE_IMAGE_FORMAT image_format){
     FreeImage_Initialise();
     FIBITMAP *img = FreeImage_Allocate(width, height, bpp);
 
+    if(width == 0 || height == 0){
+        std::cout << "Error in SaveToFile(): width and height cannot be zero" << std::endl;
+        return;
+    }
+
     if (!img){
-        std::cout << "\n!! Error: Unable to create FIBITMAP";
+        std::cout << "Error in SaveToFile(): Unable to create FIBITMAP";
         return;
     }
 
@@ -40,8 +45,39 @@ void FIP_Graph::SaveToFile(char *filename, FREE_IMAGE_FORMAT image_format){
 
     FreeImage_Save(image_format, img, filename, 0);
     FreeImage_Unload(img);
-    FreeImage_DeInitialise();
+}
 
+FIBITMAP* FIP_Graph::SaveToBitmap(){
+
+    unsigned long width, height;
+    width = options.width;
+    height = options.height;
+    int bpp = 24;
+
+    FreeImage_Initialise();
+    FIBITMAP *img = FreeImage_Allocate(width, height, bpp);
+
+    if(width == 0 || height == 0){
+        std::cout << "Error in SaveToFile(): width and height cannot be zero" << std::endl;
+        return nullptr;
+    }
+
+    if (!img){
+        std::cout << "Error in SaveToFile(): Unable to create FIBITMAP";
+        return nullptr;
+    }
+
+    vector2 maxPoint, minPoint;
+    findExtremePoints(maxPoint, minPoint);
+    graphScale = {(width/16*13) / (maxPoint.x - minPoint.x),
+                    (height/16*13) / (maxPoint.y - minPoint.y)};
+
+    if(options.graphType == GraphType::LINE_GRAPH){
+        plotLineGraph(img, maxPoint, minPoint);
+    }else if(options.graphType == GraphType::BAR_CHART){
+        plotBarChart(img, maxPoint, minPoint);
+    }
+    return img;
 }
 
 
@@ -54,7 +90,17 @@ Args:
     The color of the line
     The type of interpolation to use to draw the line connecting the points
 */
-void FIP_Graph::PlotGraph(std::vector <vector2> linePoints, unsigned int lineWidth, bool drawPoints, RGBQUAD color, enum Interpolation interpolation_type ){
+void FIP_Graph::PlotGraph(std::vector <vector2> &linePoints, unsigned int lineWidth, bool drawPoints, RGBQUAD color, enum Interpolation interpolation_type){
+
+    if(linePoints.size() < 2){
+        std::cout << "Error in PlotGraph(): linePoints must have at least 2 points" << std::endl;
+        return;
+    }
+    if(interpolation_type != NO_INTERPOLATION){
+        interpolation_type = NO_INTERPOLATION;
+        std::cout << "Warning in PlotGraph(): only Interpolation::NO_INTERPOLATION is currently supported." << std::endl;
+    }
+
     lines.push_back({interpolation_type, color, drawPoints, lineWidth, linePoints});
 }
 

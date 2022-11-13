@@ -47,8 +47,9 @@ class FIP_Graph{
 
 public:
     FIP_Graph(GraphOptions &);
-    void PlotGraph(std::vector <vector2> graphPoints, unsigned int lineWidth, bool drawPoints, RGBQUAD color, enum Interpolation interpolation_type );
+    void PlotGraph(std::vector <vector2> &graphPoints, unsigned int lineWidth, bool drawPoints, RGBQUAD color, enum Interpolation interpolation_type = Interpolation::NO_INTERPOLATION  );
     void SaveToFile(char *filename, FREE_IMAGE_FORMAT image_format);
+    FIBITMAP* SaveToBitmap();
 private:
     std::vector <Line> lines;
     GraphOptions options;
