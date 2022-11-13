@@ -1,5 +1,7 @@
 
 #include <iostream>
+#include <vector>
+#include <math.h>
 #include "Freeimage_plus.h"
 #include "Freeimage_plus_graph.h"
 
@@ -8,6 +10,7 @@ void example2();
 void example3();
 void example4();
 void example5();
+void example6();
 
 int main(){
 
@@ -19,6 +22,7 @@ int main(){
     example3();     //text
     example4();     //blur filter
     example5();     //scaling
+    example6();     //graph
 
     return 0;
 
@@ -158,5 +162,52 @@ void example5(){
     //free the bitmap memory
     FreeImage_Unload(src_bmp);
     FreeImage_Unload(dest_bmp);
+
+}
+
+//graph
+void example6(){
+    std::vector <vector2> sin_points, cos_points;
+
+    double sampleFrequency = 44100;
+    double signalFrequency = 440;
+    int samplesForPeriod = static_cast<int>(sampleFrequency / signalFrequency);
+
+    //sample a sinusoidal and a cosinusoidal signal for two periods, and puts the samples in the corrisponding vectors
+    for(int i = 0; i < samplesForPeriod * 2; i++){
+        double w = 2 * M_PI * signalFrequency;
+        double t = static_cast<double>(i / sampleFrequency);
+        sin_points.push_back({t,     //time in seconds
+                             sin(t*w)});        //value
+        cos_points.push_back({t,     //time in seconds
+                             cos(t*w)});        //value
+    }
+
+    //define some colors
+    RGBQUAD blue = {255, 0, 0, 0};
+    RGBQUAD red = {0, 0, 255, 0};
+
+    //set the options for the graph
+    GraphOptions options;
+    options.graphTitle = "Example graph";
+    options.titleSize = 16;
+    options.xAxisName = "Time";
+    options.yAxisName = "Signal";
+    options.axisTextSize = 7;
+    options.width = 1000;       //graph width in pixels
+    options.height = 600;       //graph height in pixels
+    options.graphType = GraphType::LINE_GRAPH;
+
+    //create a graph object
+    FIP_Graph graph(options);
+
+    //Plot the sin signal in red
+    graph.PlotGraph(sin_points, 3, false, red);
+
+    //Plot the cos signal in blue
+    graph.PlotGraph(cos_points, 3, false, blue);
+
+    //save the graph as a png
+    graph.SaveToFile("graph.png", FIF_PNG);
 
 }
